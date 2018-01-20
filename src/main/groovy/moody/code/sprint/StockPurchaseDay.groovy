@@ -19,10 +19,9 @@ class StockPurchaseDay {
             quotes << br.readLine().toInteger()
         }
 
-        StringBuilder sb=  new StringBuilder()
-        findPurchaseDays(quotes, prices).each { sb.append(String.valueOf(it) + "\n")}
+        StringBuilder sb =  new StringBuilder()
+        findPurchaseDays(quotes, prices).each { sb.append(String.valueOf(it)).append("\n") }
         System.out.print(sb.toString())
-
     }
 
 
@@ -31,14 +30,9 @@ class StockPurchaseDay {
         def low = Integer.MAX_VALUE
         def high = -1
         int lastDayPrice = prices.get(prices.size()-1)
-        def result = []
-        def startIdx =0
-        def bucketz = prices.collate(1000).collect( {
-
-            def b = new Bucket(it, startIdx, Collections.min(it))
-            startIdx += 1000
-            b
-        }).reverse()
+        def bucketz = prices.collate(1000).withIndex().collect{ it, idx ->
+            new Bucket(it, idx*1000, Collections.min(it))
+        }.reverse()
 
 
         prices.each {
@@ -46,19 +40,15 @@ class StockPurchaseDay {
             if (it > high) high = it
         }
 
-        quotes.each {
-            def quoteResult
+        quotes.collect {
             if (it < low) {
-                quoteResult = -1
+                -1
             } else if (it >= high || it >= lastDayPrice) {
-                quoteResult = prices.size()
+                prices.size()
             } else {
-                quoteResult = bucketz.find { b -> b.contains(it)}.findLastDay(it)
+                bucketz.find { b -> b.contains(it)}.findLastDay(it)
             }
-
-            result.add(quoteResult)
         }
-        result
     }
 
     @groovy.transform.Canonical static class Bucket {
